@@ -1,6 +1,6 @@
 {
   "name": "@watchmen/containr",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "run cli in containers",
   "type": "module",
   "exports": "./src/index.js",
