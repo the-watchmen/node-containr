@@ -3,7 +3,11 @@
   "version": "1.0.2",
   "description": "run cli in containers",
   "type": "module",
-  "exports": "./src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./oci": "./src/oci.js",
+    "./util": "./src/util.js"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/the-watchmen/node-containr.git"
