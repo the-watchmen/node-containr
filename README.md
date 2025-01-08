@@ -27,7 +27,7 @@ with-containers(
 }
 ```
 
-the implementation uses [the solid execa package](https://github.com/sindresorhus/execa/blob/main/readme.md) to exeecute command line directives against a docker container runtime which must be running on the host.
+the implementation uses [the quality execa package](https://github.com/sindresorhus/execa/blob/main/readme.md) to execute command line directives against a docker container runtime which must be running on the host.
 
 if this library is used in a container, communication between the docker client and the docker server running on the host must be supported by [mounting the docker socket](https://stackoverflow.com/questions/63201603/what-is-the-result-of-mounting-var-run-docker-sock-in-a-docker-in-docker-scen).
 
