@@ -7,7 +7,7 @@ import {toParams} from './util.js'
 
 const dbg = debug(import.meta.url)
 
-export {withImage, withImages, withContainer}
+export {withImage, withImages}
 
 async function withImage({
   image,
@@ -59,34 +59,29 @@ async function withImage({
   return result
 }
 
-async function withContainer({
-  container,
-  env = {},
-  input,
-  isLines = false,
-  isShell = true,
-}) {
-  dbg(
-    'with-container: container=%o, env=%o, input=%o, is-lines=%o, is-shell=%o',
-    container,
-    env,
-    input,
-    isLines,
-    isShell,
-  )
-
+async function withContainer({container, env, input, throwOnError}) {
   assert(container, 'container required')
 
   const cmd = `docker exec --interactive ${toEnv(env)} ${container} /bin/sh`
   dbg('with-container: cmd=%o', cmd)
 
   const result = await execa({
-    lines: isLines,
-    shell: isShell,
+    lines: true,
+    shell: true,
     input: Array.isArray(input) ? input.join(`\n`) : input,
   })`${cmd}`
   dbg('out=%o, err=%o', result.stdout, result.stderr)
-  return result
+
+  if (throwOnError && !_.isEmpty(result.stderr)) {
+    throw new Error(result.stderr)
+  }
+
+  result.stdout =
+    _.isArray(result.stdout) && _.size(result.stdout) === 1
+      ? result.stdout[0]
+      : result.stdout
+
+  return throwOnError ? result.stdout : result
 }
 
 async function withImages({
@@ -134,7 +129,23 @@ async function withImages({
 
   dbg('with-images: started containers=%o', containers)
 
-  await closure(containers)
+  const result = await closure(
+    ({image, input, env = {}, throwOnError = true}) => {
+      dbg(
+        'with-container: image=%o, env=%o, input=%o, throw-on-error=%o',
+        image,
+        env,
+        input,
+        throwOnError,
+      )
+      return withContainer({
+        container: containers[image],
+        env,
+        input,
+        throwOnError,
+      })
+    },
+  )
 
   await Promise.all(
     _.map(_.values(containers), (v) => {
@@ -143,6 +154,7 @@ async function withImages({
   )
 
   dbg('with-images: removed containers=%o', containers)
+  return result
 }
 
 function toEnv(map) {

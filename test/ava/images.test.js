@@ -1,0 +1,72 @@
+import test from 'ava'
+import debug from '@watchmen/debug'
+import {stringify} from '@watchmen/helpr'
+import {withImages} from '../../src/index.js'
+
+const dbg = debug(import.meta.url)
+
+test('basic', async (t) => {
+  const image = 'ubuntu'
+  await withImages({
+    images: {[image]: 'ubuntu:latest'},
+    async closure(withContainer) {
+      t.truthy(withContainer)
+      const out = await withContainer({
+        image,
+        input: 'ls',
+      })
+      dbg('out=%o', out)
+      t.true(out.includes('tmp'))
+    },
+  })
+})
+
+test(
+  'throws',
+  async (t) => {
+    await t.throwsAsync(_withImages({t}), {instanceOf: Error})
+  },
+  30 * 1000,
+)
+
+test(
+  'does not throw',
+  async (t) => {
+    await t.notThrowsAsync(async () => {
+      const {stdout, stderr} = await _withImages({t, throwOnError: false})
+      dbg('out=%o, err=%o', stdout, stderr)
+      t.truthy(stderr)
+    })
+  },
+  30 * 1000,
+)
+
+async function _withImages({t, throwOnError = true}) {
+  const image = 'gcloud'
+  const gcpConfig = '.config/gcloud'
+  const _gcpConfig = `/root/${gcpConfig}`
+
+  return withImages({
+    images: {
+      [image]: {
+        name: 'google/cloud-sdk:503.0.0-alpine',
+        volumes: {
+          [_gcpConfig]: `${process.env.HOME}/${gcpConfig}`,
+        },
+      },
+    },
+
+    async closure(withContainer) {
+      const withGcloud = (args) => withContainer({...args, image})
+
+      const out = await withGcloud({
+        input: 'gcloud auth list',
+        throwOnError,
+      })
+
+      dbg('out=%s', stringify(out))
+      t.truthy(out)
+      return out
+    },
+  })
+}
