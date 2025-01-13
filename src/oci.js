@@ -1,40 +1,48 @@
 import assert from 'node:assert/strict'
 import debug from '@watchmen/debug'
 import config from 'config'
-import {toParams} from './util.js'
+import {toParams, getContainerWork} from './util.js'
 import {withImage} from './index.js'
 
 export {pushOci, pullOci}
 
 const dbg = debug(import.meta.url)
-const cwork = `/${config.work.container}`
 const volumes = {'/tmp': '/tmp'}
 
-function pullOci({image, work, user}) {
+function pullOci({image, user}) {
   assert(image, 'image required')
-  dbg('pull-oci: image=%o, work=%o, user=%o', image, work, user)
+  dbg('pull-oci: image=%o, user=%o', image, user)
   return withImage({
-    image: config.images.oras,
-    command: `pull --output ${cwork} ${image}`,
-    work,
+    image: getOrasImage(),
+    command: `pull --output ${getContainerWork()} ${image}`,
     volumes,
     user,
     isLines: true,
   })
 }
 
-function pushOci({image, targets, annotations = {}}) {
+function pushOci({image, targets, user, annotations = {}}) {
   assert(image, 'image required')
   assert(targets, 'targets required')
   dbg(
-    'push-oci: image=%o, targets=%o, annotations=%o',
+    'push-oci: image=%o, targets=%o, user=%, annotations=%o',
     image,
     targets,
+    user,
     annotations,
   )
   return withImage({
-    image: config.images.oras,
+    image: getOrasImage(),
     command: `push ${toParams({map: annotations, param: '--annotation'})} ${image} ${targets} `,
     volumes,
+    user,
   })
+}
+
+function getOrasImage() {
+  return (
+    process.env.CONTAINR_ORAS_IMAGE ||
+    config.images.oras ||
+    'bitnami/oras:1.2.1'
+  )
 }

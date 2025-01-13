@@ -1,9 +1,8 @@
 import assert from 'node:assert'
 import {execa} from 'execa'
 import debug from '@watchmen/debug'
-import config from 'config'
 import _ from 'lodash'
-import {toParams} from './util.js'
+import {toParams, getHostWork, getContainerWork} from './util.js'
 
 const dbg = debug(import.meta.url)
 
@@ -18,13 +17,11 @@ async function withImage({
   input,
   isLines = false,
   isShell = true,
-  work = config.work.local,
 }) {
   dbg(
-    'with-image: image=%o, env=%o, work=%o, volumes=%o, user=%o, command=%o, input=%o, is-lines=%o, is-shell=%o',
+    'with-image: image=%o, env=%o, volumes=%o, user=%o, command=%o, input=%o, is-lines=%o, is-shell=%o',
     image,
     env,
-    work,
     volumes,
     user,
     command,
@@ -42,12 +39,12 @@ async function withImage({
     assert(_.every([input, !command]))
   }
 
-  const _volumes = getVolumes({work, volumes})
+  const _volumes = getVolumes(volumes)
   const _user = user ? `--user ${user}` : ''
 
   dbg('with-image: _volumes=%o, user=%o', _volumes, _user)
 
-  const cmd = `docker run --rm --interactive ${toEnv(env)} ${toVolumes(_volumes)} ${_user} ${_image} ${command}`
+  const cmd = `docker run --rm --interactive ${toEnv(env)} ${toVolumes(_volumes)} ${getWorkDir()} ${_user} ${_image} ${command}`
   dbg('with-image: cmd=%o', cmd)
 
   const result = await execa({
@@ -62,7 +59,7 @@ async function withImage({
 async function withContainer({container, env, input, throwOnError}) {
   assert(container, 'container required')
 
-  const cmd = `docker exec --interactive ${toEnv(env)} ${container} /bin/sh`
+  const cmd = `docker exec --interactive ${getWorkDir()} ${toEnv(env)} ${container} /bin/sh`
   dbg('with-container: cmd=%o', cmd)
 
   const result = await execa({
@@ -84,13 +81,7 @@ async function withContainer({container, env, input, throwOnError}) {
   return throwOnError ? result.stdout : result
 }
 
-async function withImages({
-  images,
-  env = {},
-  volumes = {},
-  work = config.work.local,
-  closure,
-}) {
+async function withImages({images, env = {}, volumes = {}, closure}) {
   assert(_.size(images), 'images required')
   assert(
     !_.some(images, ['hasShell', false]),
@@ -102,15 +93,9 @@ async function withImages({
   )
   assert(closure, 'closure required')
 
-  const _volumes = getVolumes({work, volumes})
+  const _volumes = getVolumes(volumes)
 
-  dbg(
-    'with-images: images=%o, env=%o, work=%o, _volumes=%o',
-    images,
-    env,
-    work,
-    _volumes,
-  )
+  dbg('with-images: images=%o, env=%o, _volumes=%o', images, env, _volumes)
 
   const containers = {}
 
@@ -165,17 +150,17 @@ function toVolumes(map) {
   return toParams({map: _.invert(map), param: '--volume', separator: ':'})
 }
 
-function getWork(work) {
-  return work.startsWith('/') ? work : `${process.cwd()}/${work}`
-}
-
-function getVolumes({work, volumes}) {
+function getVolumes(volumes) {
   return {
-    [`/${config.work.container}`]: getWork(work),
+    [getContainerWork()]: getHostWork(),
     ...volumes,
   }
 }
 
 function getImageName(image) {
   return _.isString(image) ? image : image.name
+}
+
+function getWorkDir() {
+  return `--workdir ${getContainerWork()}`
 }

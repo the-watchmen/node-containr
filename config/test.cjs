@@ -1,5 +1,5 @@
 module.exports = {
-  work: {
-    local: 'test/work',
-  },
+  // work: {
+  //   local: 'test/work',
+  // },
 }

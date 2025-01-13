@@ -6,8 +6,8 @@ module.exports = {
       hasShell: false,
     },
   },
-  work: {
-    container: 'work',
-    local: 'work',
-  },
+  // work: {
+  //   container: 'work',
+  //   local: 'work',
+  // },
 }

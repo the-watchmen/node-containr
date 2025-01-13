@@ -1,0 +1,6 @@
+config/local.*
+.env
+node_modules
+work
+.github
+.git

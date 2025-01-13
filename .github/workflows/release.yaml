@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - master
+      - main
       - '*/*'
   release:
     types: [created]
@@ -18,7 +19,7 @@ jobs:
           registry-url: https://registry.npmjs.org
       - run: npm ci
       - run: npm test
-      - run: npm publish
+      - if: github.event_name == 'release'
+        run: npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        if: github.event_name == 'release'

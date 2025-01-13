@@ -2,8 +2,13 @@ import test from 'ava'
 import debug from '@watchmen/debug'
 import {stringify} from '@watchmen/helpr'
 import {withImages} from '../../src/index.js'
+import {initHostWork} from '../../src/util.js'
 
 const dbg = debug(import.meta.url)
+
+test.beforeEach(async () => {
+  await initHostWork(true)
+})
 
 test('basic', async (t) => {
   const image = 'ubuntu'
@@ -13,7 +18,7 @@ test('basic', async (t) => {
       t.truthy(withContainer)
       const out = await withContainer({
         image,
-        input: 'ls',
+        input: 'ls /',
       })
       dbg('out=%o', out)
       t.true(out.includes('tmp'))
@@ -21,13 +26,9 @@ test('basic', async (t) => {
   })
 })
 
-test(
-  'throws',
-  async (t) => {
-    await t.throwsAsync(_withImages({t}), {instanceOf: Error})
-  },
-  30 * 1000,
-)
+test('throws', async (t) => {
+  await t.throwsAsync(_withImages({t}), {instanceOf: Error})
+})
 
 test(
   'does not throw',
