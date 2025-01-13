@@ -18,6 +18,8 @@ export {
   getHostWork,
   getContainerWork,
   getHostRoot,
+  includes,
+  filterError,
 }
 
 function getTimestamp() {
@@ -53,4 +55,31 @@ function getHostRoot() {
   return (
     process.env.CONTAINR_WORK_ROOT || config?.work?.root || '/tmp/containr/work'
   )
+}
+
+function includes(o, s) {
+  return _.isArray(o)
+    ? _.some(_.reverse(o), (v) => v.includes(s))
+    : o.includes(s)
+}
+
+function filterError({result, whitelist}) {
+  // [
+  //   "Unable to find image 'debian:bookworm-slim' locally",
+  //   'bookworm-slim: Pulling from library/debian',
+  //   'fd674058ff8f: Pulling fs layer',
+  //   'fd674058ff8f: Verifying Checksum',
+  //   'fd674058ff8f: Download complete',
+  //   'fd674058ff8f: Pull complete',
+  //   'Digest: sha256:d365f4920711a9074c4bcd178e8f457ee59250426441ab2a5f8106ed8fe948eb',
+  //   'Status: Downloaded newer image for debian:bookworm-slim'
+  // ]
+  _.some(whitelist, (v) => {
+    if (includes(result.stderr, v)) {
+      dbg('filtering error for target=%s', v)
+      result.stderr = []
+    }
+  })
+
+  return result
 }

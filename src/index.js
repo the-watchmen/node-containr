@@ -2,9 +2,10 @@ import assert from 'node:assert'
 import {execa} from 'execa'
 import debug from '@watchmen/debug'
 import _ from 'lodash'
-import {toParams, getHostWork, getContainerWork} from './util.js'
+import {toParams, getHostWork, getContainerWork, filterError} from './util.js'
 
 const dbg = debug(import.meta.url)
+const whitelist = ['Downloaded newer']
 
 export {withImage, withImages}
 
@@ -53,7 +54,7 @@ async function withImage({
     input: Array.isArray(input) ? input.join(`\n`) : input,
   })`${cmd}`
   dbg('out=%o, err=%o', result.stdout, result.stderr)
-  return result
+  return filterError({result, whitelist})
 }
 
 async function withContainer({container, env, input, throwOnError}) {
