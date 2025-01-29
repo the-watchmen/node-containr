@@ -1,6 +1,7 @@
 import assert from 'node:assert'
 import dayjs from 'dayjs'
 import debug from '@watchmen/debug'
+import {parseBoolean} from '@watchmen/helpr'
 import config from 'config'
 import fs from 'fs-extra'
 import _ from 'lodash'
@@ -9,7 +10,6 @@ import {execa} from 'execa'
 const dbg = debug(import.meta.url)
 
 const timestamp = getTimestamp()
-await initHostWork()
 
 export {
   initHostWork,
@@ -20,6 +20,7 @@ export {
   getHostRoot,
   includes,
   filterError,
+  getConfig,
 }
 
 function getTimestamp() {
@@ -29,7 +30,11 @@ function getTimestamp() {
 async function initHostWork() {
   const dir = getHostWork()
   dbg('init-host-work: dir=%s', dir)
-  await fs.emptyDir(dir)
+  if (isWorkCwd()) {
+    dbg('init-host-work: is-work-cwd, skipping initialization')
+  } else {
+    await fs.emptyDir(dir)
+  }
 }
 
 function toParams({map, param, separator = '='}) {
@@ -43,8 +48,17 @@ async function getUid() {
   return stdout
 }
 
-function getHostWork() {
-  return `${getHostRoot()}/${timestamp}`
+function getHostWork({closure} = {}) {
+  const work = isWorkCwd() ? process.cwd() : `${getHostRoot()}/${timestamp}`
+  if (closure) {
+    closure({work})
+  }
+
+  return work
+}
+
+function isWorkCwd() {
+  return parseBoolean(getConfig({path: 'work.isCwd', dflt: false}))
 }
 
 function getContainerWork() {
@@ -52,9 +66,7 @@ function getContainerWork() {
 }
 
 function getHostRoot() {
-  return (
-    process.env.CONTAINR_WORK_ROOT || config?.work?.root || '/tmp/containr/work'
-  )
+  return getConfig({path: 'work.root', dflt: '/tmp/containr/work'})
 }
 
 function includes(o, s) {
@@ -82,4 +94,12 @@ function filterError({result, whitelist}) {
   })
 
   return result
+}
+
+function getConfig({path, dflt}) {
+  // foo.bar -> CONTAINR_FOO_BAR
+  const toks = ['containr', ..._.map(path.split('.'), _.snakeCase)]
+  const env = toks.join('_').toUpperCase()
+  const _path = toks.join('.')
+  return process.env[env] || _.get(config, _path) || dflt
 }
