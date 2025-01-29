@@ -27,13 +27,20 @@ function getTimestamp() {
   return dayjs().format('YYYY-MM-DD.HH.mm.ss')
 }
 
+const git = '.git'
+
 async function initHostWork() {
   const dir = getHostWork()
   dbg('init-host-work: dir=%s', dir)
   if (isWorkCwd()) {
     dbg('init-host-work: is-work-cwd, skipping initialization')
   } else {
-    await fs.emptyDir(dir)
+    if (fs.existsSync(`${dir}/${git}`)) {
+      dbg(`init-host-work: work has ${git}, skipping initialization`)
+    } else {
+      dbg('init-host-work: clearing work dir=%s', dir)
+      // await fs.emptyDir(dir)
+    }
   }
 }
 
