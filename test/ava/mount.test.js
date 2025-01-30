@@ -8,7 +8,7 @@ import {getHostWork, getContainerWork, initHostWork} from '../../src/util.js'
 const dbg = debug(import.meta.url)
 
 test.beforeEach(async () => {
-  await initHostWork(true)
+  await initHostWork()
 })
 
 test('mount', async (t) => {

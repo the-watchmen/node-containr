@@ -1,7 +1,6 @@
 import assert from 'node:assert/strict'
 import debug from '@watchmen/debug'
-import config from 'config'
-import {toParams, getContainerWork} from './util.js'
+import {toParams, getContainerWork, getConfig} from './util.js'
 import {withImage} from './index.js'
 
 export {pushOci, pullOci}
@@ -40,9 +39,5 @@ function pushOci({image, targets, user, annotations = {}}) {
 }
 
 function getOrasImage() {
-  return (
-    process.env.CONTAINR_ORAS_IMAGE ||
-    config.images.oras ||
-    'bitnami/oras:1.2.1'
-  )
+  return getConfig({path: 'images.oras', dflt: 'bitnami/oras:1.2.1'})
 }

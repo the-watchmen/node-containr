@@ -7,7 +7,7 @@ import {initHostWork} from '../../src/util.js'
 const dbg = debug(import.meta.url)
 
 test.beforeEach(async () => {
-  await initHostWork(true)
+  await initHostWork()
 })
 
 test('basic', async (t) => {
