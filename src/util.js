@@ -101,10 +101,11 @@ function filterError({result, whitelist}) {
   return result
 }
 
-function getConfig({path, dflt}) {
+function getConfig({path, dflt = null}) {
   // foo.bar -> CONTAINR_FOO_BAR
-  const toks = ['containr', ..._.map(path.split('.'), _.snakeCase)]
-  const env = toks.join('_').toUpperCase()
+  const toks = ['containr', ...path.split('.')]
+  const env = _.snakeCase(toks.join('_')).toUpperCase()
   const _path = toks.join('.')
+  dbg('get-config: env=%s, path=%s, dflt=%s', env, _path, dflt)
   return process.env[env] || _.get(config, _path) || dflt
 }

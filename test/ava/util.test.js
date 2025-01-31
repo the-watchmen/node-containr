@@ -1,7 +1,9 @@
 import test from 'ava'
 import _ from 'lodash'
 import debug from '@watchmen/debug'
-import {toParams, includes, filterError} from '../../src/util.js'
+import {pretty} from '@watchmen/helpr'
+import config from 'config'
+import {toParams, includes, filterError, getConfig} from '../../src/util.js'
 
 const dbg = debug(import.meta.url)
 
@@ -43,4 +45,26 @@ test('filter-error: dont', (t) => {
   })
   dbg('filter-error-dont: result=%o', result)
   t.false(_.isEmpty(result.stderr))
+})
+
+test('get-config: cfg', (t) => {
+  dbg('config=%s', pretty(config))
+  t.is(getConfig({path: 'a.b.c'}), config.containr.a.b.c)
+})
+
+test('get-config: cfg camel', (t) => {
+  dbg('config=%s', pretty(config))
+  t.is(getConfig({path: 'isTrue'}), config.containr.isTrue)
+})
+
+test('get-config: env', (t) => {
+  process.env.CONTAINR_A_B_D = 'sumthin'
+  t.is(getConfig({path: 'a.b.d'}), process.env.CONTAINR_A_B_D)
+  delete process.env.CONTAINR_A_B_D
+})
+
+test('get-config: dflt', (t) => {
+  dbg('config=%s', pretty(config))
+  const dflt = 'sumthin'
+  t.is(getConfig({path: 'a.b.d', dflt}), dflt)
 })
