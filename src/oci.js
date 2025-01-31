@@ -24,7 +24,7 @@ function pushOci({image, targets, user, annotations = {}}) {
   assert(image, 'image required')
   assert(targets, 'targets required')
   dbg(
-    'push-oci: image=%o, targets=%o, user=%, annotations=%o',
+    'push-oci: image=%o, targets=%o, user=%s, annotations=%o',
     image,
     targets,
     user,
