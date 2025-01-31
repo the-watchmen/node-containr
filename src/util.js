@@ -34,13 +34,11 @@ async function initHostWork() {
   dbg('init-host-work: dir=%s', dir)
   if (isWorkCwd()) {
     dbg('init-host-work: is-work-cwd, skipping initialization')
+  } else if (fs.existsSync(`${dir}/${git}`)) {
+    dbg(`init-host-work: work has ${git}, skipping initialization`)
   } else {
-    if (fs.existsSync(`${dir}/${git}`)) {
-      dbg(`init-host-work: work has ${git}, skipping initialization`)
-    } else {
-      dbg('init-host-work: clearing work dir=%s', dir)
-      // await fs.emptyDir(dir)
-    }
+    dbg('init-host-work: creating/clearing work dir=%s', dir)
+    await fs.emptyDir(dir)
   }
 }
 

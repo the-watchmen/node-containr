@@ -1,5 +1,1 @@
-module.exports = {
-  // work: {
-  //   local: 'test/work',
-  // },
-}
+module.exports = {}

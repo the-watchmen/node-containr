@@ -33,7 +33,7 @@ test('push-oci: basic', async (t) => {
   t.true(pushError.includes('Downloaded newer') || !pushError)
 
   dbg('push: clearing work dir=%s', work)
-  await fs.emptyDir(work)
+  await initHostWork()
 
   const {stdout: pull, stderr: pullError} = await pullOci({
     image,
@@ -72,7 +72,7 @@ test('push-oci: closure', async (t) => {
   t.true(pushError.includes('Downloaded newer') || !pushError)
 
   dbg('push: clearing work dir=%s', work)
-  await fs.emptyDir(work)
+  await initHostWork()
 
   const {stdout: pull, stderr: pullError} = await pullOci({
     image,
@@ -103,8 +103,8 @@ test('push-oci: cwd', async (t) => {
 
   t.true(pushError.includes('Downloaded newer') || !pushError)
 
-  dbg('push: clearing work dir=%s', work)
-  await fs.emptyDir(work)
+  const stat = await fs.stat(file)
+  dbg('push-oci-cwd: mtime=%s', stat.mtime)
 
   const {stdout: pull, stderr: pullError} = await pullOci({
     image,
@@ -114,5 +114,8 @@ test('push-oci: cwd', async (t) => {
   t.true(pull[0].startsWith('Downloading'))
   const content = await fs.readFile(`${work}/${file}`, 'utf8')
   t.true(content.startsWith('{'))
+  const _stat = await fs.stat(file)
+  dbg('push-oci-cwd: mtime=%s', _stat.mtime)
+  t.true(stat.mtime !== _stat.mtime)
   delete process.env.CONTAINR_WORK_IS_CWD
 })
