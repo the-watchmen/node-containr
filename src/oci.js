@@ -32,7 +32,7 @@ function pushOci({image, targets, user, annotations = {}}) {
   )
   return withImage({
     image: getOrasImage(),
-    command: `push ${toParams({map: annotations, param: '--annotation'})} ${image} ${targets} `,
+    command: `push ${toParams({map: annotations, param: '--annotation'})} ${image} ${targets.join(' ')} `,
     volumes,
     user,
   })
