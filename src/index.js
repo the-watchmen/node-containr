@@ -42,10 +42,11 @@ async function withImage({
 
   const _volumes = getVolumes(volumes)
   const _user = user ? `--user ${user}` : ''
+  const entry = image.entrypoint ? `--entrypoint ${image.entrypoint}` : ''
 
-  dbg('with-image: _volumes=%o, user=%o', _volumes, _user)
+  dbg('with-image: _volumes=%o, user=%o, entry=%s', _volumes, _user, entry)
 
-  const cmd = `docker run --rm --interactive ${toEnv(env)} ${toVolumes(_volumes)} ${getWorkDir()} ${_user} ${_image} ${command}`
+  const cmd = `docker run --rm --interactive ${entry} ${toEnv(env)} ${toVolumes(_volumes)} ${getWorkDir()} ${_user} ${_image} ${command}`
   dbg('with-image: cmd=%o', cmd)
 
   const result = await execa({
@@ -104,7 +105,10 @@ async function withImages({images, env = {}, volumes = {}, closure}) {
     _.map(images, async (v, k) => {
       const _image = getImageName(v)
       const __volumes = {..._volumes, ...v.volumes}
-      const cmd = `docker run --rm ${toEnv(env)} ${toVolumes(__volumes)} -dit ${_image} /bin/sh`
+      const entry = v.entrypoint ? `--entrypoint ${v.entrypoint}` : ''
+      const _cmd = entry ? '' : '/bin/sh'
+
+      const cmd = `docker run --rm ${toEnv(env)} ${toVolumes(__volumes)} -dit ${entry} ${_image} ${_cmd}`
       dbg('with-images: cmd=%o', cmd)
       const {stdout} = await execa({
         shell: true,

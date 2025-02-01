@@ -71,3 +71,24 @@ async function _withImages({t, throwOnError = true}) {
     },
   })
 }
+
+test('entry', async (t) => {
+  const image = 'oras'
+  await withImages({
+    images: {
+      [image]: {
+        name: 'ghcr.io/oras-project/oras:v1.2.2',
+        entrypoint: '/bin/sh',
+      },
+    },
+    async closure(withContainer) {
+      t.truthy(withContainer)
+      const out = await withContainer({
+        image,
+        input: 'which oras',
+      })
+      dbg('out=%o', out)
+      t.is(out, '/bin/oras')
+    },
+  })
+})

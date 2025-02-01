@@ -57,3 +57,15 @@ test('volume', async (t) => {
   dbg('out=%o', stdout)
   t.is(stdout, file)
 })
+
+test('entry', async (t) => {
+  const {stdout} = await withImage({
+    image: {
+      name: 'ghcr.io/oras-project/oras:v1.2.2',
+      entrypoint: 'sh',
+    },
+    input: 'which oras',
+  })
+  dbg('out=%o', stdout)
+  t.truthy(stdout)
+})

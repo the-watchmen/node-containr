@@ -13,7 +13,7 @@ function pullOci({image, user}) {
   dbg('pull-oci: image=%o, user=%o', image, user)
   return withImage({
     image: getOrasImage(),
-    command: `pull --output ${getContainerWork()} ${image}`,
+    input: `oras pull --output ${getContainerWork()} ${image}`,
     volumes,
     user,
     isLines: true,
@@ -32,12 +32,18 @@ function pushOci({image, targets, user, annotations = {}}) {
   )
   return withImage({
     image: getOrasImage(),
-    command: `push ${toParams({map: annotations, param: '--annotation'})} ${image} ${targets.join(' ')} `,
+    input: `oras push ${toParams({map: annotations, param: '--annotation'})} ${image} ${targets.join(' ')} `,
     volumes,
     user,
   })
 }
 
 function getOrasImage() {
-  return getConfig({path: 'images.oras', dflt: 'bitnami/oras:1.2.1'})
+  return getConfig({
+    path: 'images.oras',
+    dflt: {
+      name: 'ghcr.io/oras-project/oras:v1.2.2',
+      entrypoint: '/bin/sh',
+    },
+  })
 }
