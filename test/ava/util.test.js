@@ -3,17 +3,17 @@ import _ from 'lodash'
 import debug from '@watchmen/debug'
 import {pretty} from '@watchmen/helpr'
 import config from 'config'
-import {toParams, includes, filterError, getConfig} from '../../src/util.js'
+import {toFlags, includes, filterError, getConfig} from '../../src/util.js'
 
 const dbg = debug(import.meta.url)
 
-test('to-params: basic', (t) => {
-  t.is(toParams({map: {a: 'b', c: 'd'}, param: '--foo'}), '--foo a=b --foo c=d')
+test('to-flags: basic', (t) => {
+  t.is(toFlags({map: {a: 'b', c: 'd'}, flag: 'foo'}), '--foo a=b --foo c=d')
 })
 
-test('to-params: sep', (t) => {
+test('to-flags: sep', (t) => {
   t.is(
-    toParams({map: {a: 'b', c: 'd'}, param: '--foo', separator: ':'}),
+    toFlags({map: {a: 'b', c: 'd'}, flag: 'foo', separator: ':'}),
     '--foo a:b --foo c:d',
   )
 })

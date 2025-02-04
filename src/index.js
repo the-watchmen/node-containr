@@ -2,7 +2,13 @@ import assert from 'node:assert'
 import {execa} from 'execa'
 import debug from '@watchmen/debug'
 import _ from 'lodash'
-import {toParams, getHostWork, getContainerWork, filterError} from './util.js'
+import {
+  toFlag,
+  toFlags,
+  getHostWork,
+  getContainerWork,
+  filterError,
+} from './util.js'
 
 const dbg = debug(import.meta.url)
 const whitelist = ['Downloaded newer']
@@ -41,12 +47,16 @@ async function withImage({
   }
 
   const _volumes = getVolumes(volumes)
-  const _user = user ? `--user ${user}` : ''
-  const entry = image.entrypoint ? `--entrypoint ${image.entrypoint}` : ''
+  const entry = toEntry(image.entrypoint)
 
-  dbg('with-image: _volumes=%o, user=%o, entry=%s', _volumes, _user, entry)
+  dbg(
+    'with-image: _volumes=%o, user=%o, entry=%s',
+    _volumes,
+    user,
+    image.entrypoint,
+  )
 
-  const cmd = `docker run --rm --interactive ${entry} ${toEnv(env)} ${toVolumes(_volumes)} ${getWorkDir()} ${_user} ${_image} ${command}`
+  const cmd = `docker run --rm --interactive ${entry} ${toEnv(env)} ${toVolumes(_volumes)} ${toWorkdir()} ${toUser(user)} ${_image} ${command}`
   dbg('with-image: cmd=%o', cmd)
 
   const result = await execa({
@@ -58,10 +68,10 @@ async function withImage({
   return filterError({result, whitelist})
 }
 
-async function withContainer({container, env, input, throwOnError}) {
+async function withContainer({container, env, input, throwOnError, user}) {
   assert(container, 'container required')
-
-  const cmd = `docker exec --interactive ${getWorkDir()} ${toEnv(env)} ${container} /bin/sh`
+  const _user = user ? `--user ${user}` : ''
+  const cmd = `docker exec --interactive ${_user} ${toWorkdir()} ${toEnv(env)} ${container} /bin/sh`
   dbg('with-container: cmd=%o', cmd)
 
   const result = await execa({
@@ -83,7 +93,7 @@ async function withContainer({container, env, input, throwOnError}) {
   return throwOnError ? result.stdout : result
 }
 
-async function withImages({images, env = {}, volumes = {}, closure}) {
+async function withImages({images, env = {}, volumes = {}, user, closure}) {
   assert(_.size(images), 'images required')
   assert(
     !_.some(images, ['hasShell', false]),
@@ -97,7 +107,13 @@ async function withImages({images, env = {}, volumes = {}, closure}) {
 
   const _volumes = getVolumes(volumes)
 
-  dbg('with-images: images=%o, env=%o, _volumes=%o', images, env, _volumes)
+  dbg(
+    'with-images: images=%o, env=%o, _volumes=%o, user=%s',
+    images,
+    env,
+    _volumes,
+    user,
+  )
 
   const containers = {}
 
@@ -105,10 +121,10 @@ async function withImages({images, env = {}, volumes = {}, closure}) {
     _.map(images, async (v, k) => {
       const _image = getImageName(v)
       const __volumes = {..._volumes, ...v.volumes}
-      const entry = v.entrypoint ? `--entrypoint ${v.entrypoint}` : ''
+      const entry = toEntry(v.entrypoint)
       const _cmd = entry ? '' : '/bin/sh'
 
-      const cmd = `docker run --rm ${toEnv(env)} ${toVolumes(__volumes)} -dit ${entry} ${_image} ${_cmd}`
+      const cmd = `docker run --rm ${toEnv(env)} ${toVolumes(__volumes)} -dit ${entry} ${toUser(user)} ${_image} ${_cmd}`
       dbg('with-images: cmd=%o', cmd)
       const {stdout} = await execa({
         shell: true,
@@ -148,11 +164,11 @@ async function withImages({images, env = {}, volumes = {}, closure}) {
 }
 
 function toEnv(map) {
-  return toParams({map, param: '--env'})
+  return toFlags({map, flag: 'env'})
 }
 
 function toVolumes(map) {
-  return toParams({map: _.invert(map), param: '--volume', separator: ':'})
+  return toFlags({map: _.invert(map), flag: 'volume', separator: ':'})
 }
 
 function getVolumes(volumes) {
@@ -166,6 +182,14 @@ function getImageName(image) {
   return _.isString(image) ? image : image.name
 }
 
-function getWorkDir() {
-  return `--workdir ${getContainerWork()}`
+function toUser(user) {
+  return toFlag({flag: 'user', val: user})
+}
+
+function toWorkdir(dir = getContainerWork()) {
+  return toFlag({flag: 'workdir', val: dir})
+}
+
+function toEntry(entry) {
+  return toFlag({flag: 'entrypoint', val: entry})
 }
