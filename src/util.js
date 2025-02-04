@@ -13,7 +13,8 @@ const timestamp = getTimestamp()
 
 export {
   initHostWork,
-  toParams,
+  toFlag,
+  toFlags,
   getUid,
   getHostWork,
   getContainerWork,
@@ -42,8 +43,12 @@ async function initHostWork() {
   }
 }
 
-function toParams({map, param, separator = '='}) {
-  return _.map(map, (v, k) => `${param} ${k}${separator}${v}`).join(' ')
+function toFlag({flag, val}) {
+  return val ? `--${flag} ${val}` : ''
+}
+
+function toFlags({map, flag, separator = '='}) {
+  return _.map(map, (v, k) => `--${flag} ${k}${separator}${v}`).join(' ')
 }
 
 async function getUid() {

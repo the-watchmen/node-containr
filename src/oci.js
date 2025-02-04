@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import debug from '@watchmen/debug'
-import {toParams, getContainerWork, getConfig} from './util.js'
+import {toFlags, getContainerWork, getConfig} from './util.js'
 import {withImage} from './index.js'
 
 export {pushOci, pullOci}
@@ -32,7 +32,7 @@ function pushOci({image, targets, user, annotations = {}}) {
   )
   return withImage({
     image: getOrasImage(),
-    input: `oras push ${toParams({map: annotations, param: '--annotation'})} ${image} ${targets.join(' ')} `,
+    input: `oras push ${toFlags({map: annotations, flag: 'annotation'})} ${image} ${targets.join(' ')}`,
     volumes,
     user,
   })
