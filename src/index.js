@@ -56,7 +56,9 @@ async function withImage({
     image.entrypoint,
   )
 
-  const cmd = `docker run --rm --interactive ${entry} ${toEnv(env)} ${toVolumes(_volumes)} ${toWorkdir()} ${toUser(user)} ${_image} ${command}`
+  const work = getContainerWork()
+
+  const cmd = `docker run --rm --interactive ${entry} ${toEnv(env)} ${toVolumes(_volumes)} ${toWorkdir(work)} ${toUser(user)} ${_image} ${command}`
   dbg('with-image: cmd=%o', cmd)
 
   const result = await execa({
@@ -68,10 +70,17 @@ async function withImage({
   return filterError({result, whitelist})
 }
 
-async function withContainer({container, env, input, throwOnError, user}) {
+async function withContainer({
+  container,
+  env,
+  input,
+  throwOnError,
+  user,
+  workdir,
+}) {
   assert(container, 'container required')
   const _user = user ? `--user ${user}` : ''
-  const cmd = `docker exec --interactive ${_user} ${toWorkdir()} ${toEnv(env)} ${container} /bin/sh`
+  const cmd = `docker exec --interactive ${_user} ${toEnv(env)} ${toWorkdir(workdir)} ${container} /bin/sh`
   dbg('with-container: cmd=%o', cmd)
 
   const result = await execa({
@@ -123,8 +132,9 @@ async function withImages({images, env = {}, volumes = {}, user, closure}) {
       const __volumes = {..._volumes, ...v.volumes}
       const entry = toEntry(v.entrypoint)
       const _cmd = entry ? '' : '/bin/sh'
+      const work = getContainerWork()
 
-      const cmd = `docker run --rm ${toEnv(env)} ${toVolumes(__volumes)} -dit ${entry} ${toUser(user)} ${_image} ${_cmd}`
+      const cmd = `docker run --rm ${toEnv(env)} ${toVolumes(__volumes)} ${toWorkdir(work)} -dit ${entry} ${toUser(user)} ${_image} ${_cmd}`
       dbg('with-images: cmd=%o', cmd)
       const {stdout} = await execa({
         shell: true,
@@ -186,7 +196,7 @@ function toUser(user) {
   return toFlag({flag: 'user', val: user})
 }
 
-function toWorkdir(dir = getContainerWork()) {
+function toWorkdir(dir) {
   return toFlag({flag: 'workdir', val: dir})
 }
 
