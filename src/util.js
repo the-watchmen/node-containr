@@ -111,6 +111,7 @@ function getConfig({path, dflt = null}) {
   const toks = ['containr', ...path.split('.')]
   const env = _.snakeCase(toks.join('_')).toUpperCase()
   const _path = toks.join('.')
-  dbg('get-config: env=%s, path=%s, dflt=%s', env, _path, dflt)
-  return process.env[env] || _.get(config, _path) || dflt
+  const value = process.env[env] || _.get(config, _path) || dflt
+  dbg('get-config: env=%s, path=%s, dflt=%s, value=%s', env, _path, dflt, value)
+  return value
 }
