@@ -1,7 +1,7 @@
 import assert from 'node:assert'
 import dayjs from 'dayjs'
 import debug from '@watchmen/debug'
-import {parseBoolean} from '@watchmen/helpr'
+import {parseBoolean, pretty} from '@watchmen/helpr'
 import config from 'config'
 import fs from 'fs-extra'
 import _ from 'lodash'
@@ -40,6 +40,8 @@ async function initHostWork() {
   } else {
     dbg('init-host-work: creating/clearing work dir=%s', dir)
     await fs.emptyDir(dir)
+    const {stdout} = await execa({lines: true})`ls -laR ${dir}`
+    dbg('init-host-work=%s', pretty(stdout))
   }
 }
 
