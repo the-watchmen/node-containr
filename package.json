@@ -33,14 +33,14 @@
     "config": "^3.3.12",
     "dayjs": "^1.11.13",
     "execa": "^9.5.2",
-    "fs-extra": "^11.2.0",
+    "fs-extra": "^11.3.0",
     "lodash": "^4.17.21"
   },
   "devDependencies": {
     "ava": "^6.2.0",
-    "eslint-config-prettier": "^9.1.0",
-    "eslint-plugin-prettier": "^5.2.1",
-    "prettier": "^3.4.2",
+    "eslint-config-prettier": "^10.0.1",
+    "eslint-plugin-prettier": "^5.2.3",
+    "prettier": "^3.5.2",
     "xo": "^0.60.0"
   },
   "publishConfig": {
