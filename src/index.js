@@ -130,11 +130,12 @@ async function withImages({images, env = {}, volumes = {}, user, closure}) {
     _.map(images, async (v, k) => {
       const _image = getImageName(v)
       const __volumes = {..._volumes, ...v.volumes}
+      const _env = {...env, ...v.env}
       const entry = toEntry(v.entrypoint)
       const _cmd = entry ? '' : '/bin/sh'
       const work = getContainerWork()
 
-      const cmd = `docker run --rm ${toEnv(env)} ${toVolumes(__volumes)} ${toWorkdir(work)} -dit ${entry} ${toUser(user)} ${_image} ${_cmd}`
+      const cmd = `docker run --rm ${toEnv(_env)} ${toVolumes(__volumes)} ${toWorkdir(work)} -dit ${entry} ${toUser(user)} ${_image} ${_cmd}`
       dbg('with-images: cmd=%o', cmd)
       const {stdout} = await execa({
         shell: true,
