@@ -22,6 +22,13 @@ export {
   includes,
   filterError,
   getConfig,
+  toEnv,
+  toVolumes,
+  getVolumes,
+  getImageName,
+  toUser,
+  toWorkdir,
+  toEntry,
 }
 
 function getTimestamp() {
@@ -74,11 +81,11 @@ function isWorkCwd() {
 }
 
 function getContainerWork() {
-  return getHostRoot()
+  return getConfig({path: 'container.work', dflt: '/tmp/containr/work'})
 }
 
 function getHostRoot() {
-  return getConfig({path: 'work.root', dflt: '/tmp/containr/work'})
+  return getConfig({path: 'host.root', dflt: '/tmp/containr/work'})
 }
 
 function includes(o, s) {
@@ -116,4 +123,35 @@ function getConfig({path, dflt = null}) {
   const value = process.env[env] || _.get(config, _path) || dflt
   dbg('get-config: env=%s, path=%s, dflt=%s, value=%s', env, _path, dflt, value)
   return value
+}
+
+function toEnv(map) {
+  return toFlags({map, flag: 'env'})
+}
+
+function toVolumes(map) {
+  return toFlags({map: _.invert(map), flag: 'volume', separator: ':'})
+}
+
+function getVolumes(volumes) {
+  return {
+    [getContainerWork()]: getHostWork(),
+    ...volumes,
+  }
+}
+
+function getImageName(image) {
+  return _.isString(image) ? image : image.name
+}
+
+function toUser(user) {
+  return toFlag({flag: 'user', val: user})
+}
+
+function toWorkdir(dir) {
+  return toFlag({flag: 'workdir', val: dir})
+}
+
+function toEntry(entry) {
+  return toFlag({flag: 'entrypoint', val: entry})
 }

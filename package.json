@@ -1,6 +1,6 @@
 {
   "name": "@watchmen/containr",
-  "version": "1.1.4",
+  "version": "1.2.0",
   "description": "run cli in containers",
   "type": "module",
   "exports": {
@@ -17,8 +17,8 @@
     "test": "npm run ava",
     "posttest": "npm run clear",
     "ava": "DEBUG=dbg:* NODE_ENV=test npx ava --serial",
-    "pretest-container": "docker build -t $(npm run tag --silent) --progress=plain --target=test .",
-    "test-container": "docker run -v /var/run/docker.sock:/var/run/docker.sock -v /tmp:/tmp -u $(npm run user --silent)  $(npm run tag --silent)",
+    "pretest-container": "docker build -t $(npm run -s tag) --progress=plain --target=test .",
+    "test-container": "docker run -v /var/run/docker.sock:/var/run/docker.sock -v /tmp:/tmp -u $(npm run -s user)  $(npm run -s tag)",
     "posttest-container": "npm run clear",
     "tagx": "echo ${npm_package_name}:${npm_package_version}-$(git rev-parse --short HEAD^) | cut -c2-",
     "tag": "echo ${npm_package_name}:${npm_package_version} | cut -c2-",
@@ -29,7 +29,7 @@
   "license": "ISC",
   "dependencies": {
     "@watchmen/debug": "^2.0.8",
-    "@watchmen/helpr": "^3.0.0",
+    "@watchmen/helpr": "^3.1.0",
     "config": "^3.3.12",
     "dayjs": "^1.11.13",
     "execa": "^9.5.2",
@@ -38,7 +38,7 @@
   },
   "devDependencies": {
     "ava": "^6.2.0",
-    "eslint-config-prettier": "^10.0.1",
+    "eslint-config-prettier": "^10.0.2",
     "eslint-plugin-prettier": "^5.2.3",
     "prettier": "^3.5.2",
     "xo": "^0.60.0"

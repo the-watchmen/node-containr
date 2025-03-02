@@ -3,11 +3,15 @@ import {execa} from 'execa'
 import debug from '@watchmen/debug'
 import _ from 'lodash'
 import {
-  toFlag,
-  toFlags,
-  getHostWork,
   getContainerWork,
   filterError,
+  getImageName,
+  getVolumes,
+  toEntry,
+  toEnv,
+  toVolumes,
+  toWorkdir,
+  toUser,
 } from './util.js'
 
 const dbg = debug(import.meta.url)
@@ -172,35 +176,4 @@ async function withImages({images, env = {}, volumes = {}, user, closure}) {
 
   dbg('with-images: removed containers=%o', containers)
   return result
-}
-
-function toEnv(map) {
-  return toFlags({map, flag: 'env'})
-}
-
-function toVolumes(map) {
-  return toFlags({map: _.invert(map), flag: 'volume', separator: ':'})
-}
-
-function getVolumes(volumes) {
-  return {
-    [getContainerWork()]: getHostWork(),
-    ...volumes,
-  }
-}
-
-function getImageName(image) {
-  return _.isString(image) ? image : image.name
-}
-
-function toUser(user) {
-  return toFlag({flag: 'user', val: user})
-}
-
-function toWorkdir(dir) {
-  return toFlag({flag: 'workdir', val: dir})
-}
-
-function toEntry(entry) {
-  return toFlag({flag: 'entrypoint', val: entry})
 }
