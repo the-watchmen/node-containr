@@ -1,5 +1,4 @@
 import assert from 'node:assert'
-import dayjs from 'dayjs'
 import debug from '@watchmen/debug'
 import {parseBoolean, pretty} from '@watchmen/helpr'
 import config from 'config'
@@ -9,8 +8,6 @@ import {execa} from 'execa'
 
 const dbg = debug(import.meta.url)
 
-const timestamp = getTimestamp()
-
 export {
   initHostWork,
   toFlag,
@@ -18,7 +15,6 @@ export {
   getUid,
   getHostWork,
   getContainerWork,
-  getHostRoot,
   includes,
   filterError,
   getConfig,
@@ -29,20 +25,23 @@ export {
   toUser,
   toWorkdir,
   toEntry,
-}
-
-function getTimestamp() {
-  return dayjs().format('YYYY-MM-DD.HH.mm.ss')
+  isContainer,
 }
 
 const git = '.git'
 
 async function initHostWork() {
-  const dir = getHostWork()
-  dbg('init-host-work: dir=%s', dir)
-  if (isWorkCwd()) {
-    dbg('init-host-work: is-work-cwd, skipping initialization')
-  } else if (fs.existsSync(`${dir}/${git}`)) {
+  if (!isInitWork()) {
+    throw new Error(
+      'CONTAINR_WORK_IS_INIT env, or containr.work.isInit config must be set to call initHostWork()',
+    )
+  }
+
+  const _isContainer = await isContainer()
+  dbg('is-container=%o', _isContainer)
+  const dir = _isContainer ? getContainerWork() : getHostWork()
+
+  if (fs.existsSync(`${dir}/${git}`)) {
     dbg(`init-host-work: work has ${git}, skipping initialization`)
   } else {
     dbg('init-host-work: creating/clearing work dir=%s', dir)
@@ -67,26 +66,30 @@ async function getUid() {
   return stdout
 }
 
-function getHostWork({closure} = {}) {
-  const work = isWorkCwd() ? process.cwd() : `${getHostRoot()}/${timestamp}`
-  if (closure) {
-    closure({work})
-  }
+// function getHostWork({closure} = {}) {
+//   const work = isWorkCwd() ? process.cwd() : `${getHostRoot()}/${timestamp}`
+//   if (closure) {
+//     closure({work})
+//   }
 
-  return work
+//   return work
+// }
+
+function isInitWork() {
+  return parseBoolean(getConfig({path: 'work.isInit', dflt: false}))
 }
 
-function isWorkCwd() {
-  return parseBoolean(getConfig({path: 'work.isCwd', dflt: false}))
+function getHostWork() {
+  return getConfig({path: 'work.host', dflt: '/tmp/containr/work'})
 }
 
 function getContainerWork() {
-  return getConfig({path: 'container.work', dflt: '/tmp/containr/work'})
+  return getConfig({path: 'work.container', dflt: '/tmp/containr/work'})
 }
 
-function getHostRoot() {
-  return getConfig({path: 'host.root', dflt: '/tmp/containr/work'})
-}
+// function getHostRoot() {
+//   return getConfig({path: 'host.root', dflt: '/tmp/containr/work'})
+// }
 
 function includes(o, s) {
   return _.isArray(o)
@@ -154,4 +157,8 @@ function toWorkdir(dir) {
 
 function toEntry(entry) {
   return toFlag({flag: 'entrypoint', val: entry})
+}
+
+async function isContainer() {
+  return fs.exists('/.dockerenv')
 }

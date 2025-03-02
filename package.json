@@ -5,7 +5,6 @@
   "type": "module",
   "exports": {
     ".": "./src/index.js",
-    "./oci": "./src/oci.js",
     "./util": "./src/util.js"
   },
   "repository": {
@@ -31,7 +30,6 @@
     "@watchmen/debug": "^2.0.8",
     "@watchmen/helpr": "^3.1.0",
     "config": "^3.3.12",
-    "dayjs": "^1.11.13",
     "execa": "^9.5.2",
     "fs-extra": "^11.3.0",
     "lodash": "^4.17.21"
