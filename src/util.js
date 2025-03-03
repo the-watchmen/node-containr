@@ -9,7 +9,7 @@ import {execa} from 'execa'
 const dbg = debug(import.meta.url)
 
 export {
-  initHostWork,
+  initWork,
   toFlag,
   toFlags,
   getUid,
@@ -30,24 +30,25 @@ export {
 
 const git = '.git'
 
-async function initHostWork() {
-  if (!isInitWork()) {
-    throw new Error(
-      'CONTAINR_WORK_IS_INIT env, or containr.work.isInit config must be set to call initHostWork()',
-    )
-  }
-
+async function initWork() {
   const _isContainer = await isContainer()
-  dbg('is-container=%o', _isContainer)
+  dbg('init-work: is-container=%o', _isContainer)
   const dir = _isContainer ? getContainerWork() : getHostWork()
 
-  if (fs.existsSync(`${dir}/${git}`)) {
-    dbg(`init-host-work: work has ${git}, skipping initialization`)
+  if (isInitWork()) {
+    if (fs.existsSync(`${dir}/${git}`)) {
+      dbg(`init-work: work has ${git}, skipping initialization`)
+    } else {
+      dbg('init-work: creating/clearing work dir=%s', dir)
+      await fs.emptyDir(dir)
+      const {stdout} = await execa({lines: true})`ls -laR ${dir}`
+      dbg('init-work=%s', pretty(stdout))
+    }
   } else {
-    dbg('init-host-work: creating/clearing work dir=%s', dir)
-    await fs.emptyDir(dir)
-    const {stdout} = await execa({lines: true})`ls -laR ${dir}`
-    dbg('init-host-work=%s', pretty(stdout))
+    dbg(
+      'init-work: attempt to initialize work=%s, but is-init-work not set, ignoring...',
+      dir,
+    )
   }
 }
 
@@ -66,15 +67,6 @@ async function getUid() {
   return stdout
 }
 
-// function getHostWork({closure} = {}) {
-//   const work = isWorkCwd() ? process.cwd() : `${getHostRoot()}/${timestamp}`
-//   if (closure) {
-//     closure({work})
-//   }
-
-//   return work
-// }
-
 function isInitWork() {
   return parseBoolean(getConfig({path: 'work.isInit', dflt: false}))
 }
@@ -86,10 +78,6 @@ function getHostWork() {
 function getContainerWork() {
   return getConfig({path: 'work.container', dflt: '/tmp/containr/work'})
 }
-
-// function getHostRoot() {
-//   return getConfig({path: 'host.root', dflt: '/tmp/containr/work'})
-// }
 
 function includes(o, s) {
   return _.isArray(o)

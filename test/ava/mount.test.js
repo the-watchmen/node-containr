@@ -3,12 +3,12 @@ import debug from '@watchmen/debug'
 import fs from 'fs-extra'
 import _ from 'lodash'
 import {withImage} from '../../src/index.js'
-import {getHostWork, getContainerWork, initHostWork} from '../../src/util.js'
+import {getHostWork, getContainerWork, initWork} from '../../src/util.js'
 
 const dbg = debug(import.meta.url)
 
 test.beforeEach(async () => {
-  await initHostWork()
+  await initWork()
 })
 
 test('mount', async (t) => {

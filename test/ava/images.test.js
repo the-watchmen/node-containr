@@ -2,12 +2,12 @@ import test from 'ava'
 import debug from '@watchmen/debug'
 import {stringify} from '@watchmen/helpr'
 import {withImages} from '../../src/index.js'
-import {initHostWork} from '../../src/util.js'
+import {initWork} from '../../src/util.js'
 
 const dbg = debug(import.meta.url)
 
 test.beforeEach(async () => {
-  await initHostWork()
+  await initWork()
 })
 
 test('basic', async (t) => {

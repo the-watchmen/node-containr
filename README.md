@@ -56,7 +56,7 @@ and the intention is to operate on those files as a ci flow might for linting an
 
 for this scenario, the following environment variable should be set to `true`
 
-- `CONTAINR_WORK_IS_CWD`
+- `CONTAINR_WORK_IS_INIT`
 
 ### work directory is a new empty directory
 
@@ -68,6 +68,6 @@ work folders from a provided parent folder.
 
 this parent folder will default to `/tmp/containr/work` but can be overridden with the following environment variable which should b set to an absolute folder path
 
-- `CONTAINR_HOST_ROOT`
+- `CONTAINR_WORK_HOST`
 
 when mounting this to orchestrated docker containers it will always be mounted to the container folder returned by the helper function `getContainerWork()`, but this folder should be set as the docker working directory and the client should not have to reference this path directly, but rather just operate in the current working directory.

@@ -3,12 +3,12 @@ import path from 'node:path'
 import test from 'ava'
 import debug from '@watchmen/debug'
 import {withImage} from '../../src/index.js'
-import {getContainerWork, getUid, initHostWork} from '../../src/util.js'
+import {getContainerWork, getUid, initWork} from '../../src/util.js'
 
 const dbg = debug(import.meta.url)
 
 test.beforeEach(async () => {
-  await initHostWork()
+  await initWork()
 })
 
 test('single line input', async (t) => {
