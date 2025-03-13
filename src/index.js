@@ -12,6 +12,7 @@ import {
   toVolumes,
   toWorkdir,
   toUser,
+  isAllowed,
 } from './util.js'
 
 const dbg = debug(import.meta.url)
@@ -81,6 +82,7 @@ async function withContainer({
   throwOnError,
   user,
   workdir,
+  allowedErrors,
 }) {
   assert(container, 'container required')
   const _user = user ? `--user ${user}` : ''
@@ -91,10 +93,13 @@ async function withContainer({
     lines: true,
     shell: true,
     input: Array.isArray(input) ? input.join(`\n`) : input,
+    // https://github.com/sindresorhus/execa/blob/main/docs/errors.md
+    //
+    reject: false,
   })`${cmd}`
   dbg('out=%o, err=%o', result.stdout, result.stderr)
 
-  if (throwOnError && !_.isEmpty(result.stderr)) {
+  if (throwOnError && !isAllowed({error: result.stderr, allowedErrors})) {
     throw new Error(result.stderr)
   }
 
@@ -151,19 +156,21 @@ async function withImages({images, env = {}, volumes = {}, user, closure}) {
   dbg('with-images: started containers=%o', containers)
 
   const result = await closure(
-    ({image, input, env = {}, throwOnError = true}) => {
+    ({image, input, env = {}, throwOnError = true, allowedErrors = []}) => {
       dbg(
-        'with-container: image=%o, env=%o, input=%o, throw-on-error=%o',
+        'with-container: image=%o, env=%o, input=%o, throw-on-error=%o, allowed-errors=%o',
         image,
         env,
         input,
         throwOnError,
+        allowedErrors,
       )
       return withContainer({
         container: containers[image],
         env,
         input,
         throwOnError,
+        allowedErrors,
       })
     },
   )

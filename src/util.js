@@ -1,5 +1,4 @@
 import assert from 'node:assert'
-import dayjs from 'dayjs'
 import debug from '@watchmen/debug'
 import {parseBoolean, pretty} from '@watchmen/helpr'
 import config from 'config'
@@ -9,16 +8,13 @@ import {execa} from 'execa'
 
 const dbg = debug(import.meta.url)
 
-const timestamp = getTimestamp()
-
 export {
-  initHostWork,
+  initWork,
   toFlag,
   toFlags,
   getUid,
   getHostWork,
   getContainerWork,
-  getHostRoot,
   includes,
   filterError,
   getConfig,
@@ -29,26 +25,31 @@ export {
   toUser,
   toWorkdir,
   toEntry,
-}
-
-function getTimestamp() {
-  return dayjs().format('YYYY-MM-DD.HH.mm.ss')
+  isContainer,
+  isAllowed,
 }
 
 const git = '.git'
 
-async function initHostWork() {
-  const dir = getHostWork()
-  dbg('init-host-work: dir=%s', dir)
-  if (isWorkCwd()) {
-    dbg('init-host-work: is-work-cwd, skipping initialization')
-  } else if (fs.existsSync(`${dir}/${git}`)) {
-    dbg(`init-host-work: work has ${git}, skipping initialization`)
+async function initWork() {
+  const _isContainer = await isContainer()
+  dbg('init-work: is-container=%o', _isContainer)
+  const dir = _isContainer ? getContainerWork() : getHostWork()
+
+  if (isInitWork()) {
+    if (fs.existsSync(`${dir}/${git}`)) {
+      dbg(`init-work: work has ${git}, skipping initialization`)
+    } else {
+      dbg('init-work: creating/clearing work dir=%s', dir)
+      await fs.emptyDir(dir)
+      const {stdout} = await execa({lines: true})`ls -laR ${dir}`
+      dbg('init-work=%s', pretty(stdout))
+    }
   } else {
-    dbg('init-host-work: creating/clearing work dir=%s', dir)
-    await fs.emptyDir(dir)
-    const {stdout} = await execa({lines: true})`ls -laR ${dir}`
-    dbg('init-host-work=%s', pretty(stdout))
+    dbg(
+      'init-work: attempt to initialize work=%s, but is-init-work not set, ignoring...',
+      dir,
+    )
   }
 }
 
@@ -67,25 +68,16 @@ async function getUid() {
   return stdout
 }
 
-function getHostWork({closure} = {}) {
-  const work = isWorkCwd() ? process.cwd() : `${getHostRoot()}/${timestamp}`
-  if (closure) {
-    closure({work})
-  }
-
-  return work
+function isInitWork() {
+  return parseBoolean(getConfig({path: 'work.isInit', dflt: false}))
 }
 
-function isWorkCwd() {
-  return parseBoolean(getConfig({path: 'work.isCwd', dflt: false}))
+function getHostWork() {
+  return getConfig({path: 'work.host', dflt: '/tmp/containr/work'})
 }
 
 function getContainerWork() {
-  return getConfig({path: 'container.work', dflt: '/tmp/containr/work'})
-}
-
-function getHostRoot() {
-  return getConfig({path: 'host.root', dflt: '/tmp/containr/work'})
+  return getConfig({path: 'work.container', dflt: '/tmp/containr/work'})
 }
 
 function includes(o, s) {
@@ -154,4 +146,25 @@ function toWorkdir(dir) {
 
 function toEntry(entry) {
   return toFlag({flag: 'entrypoint', val: entry})
+}
+
+async function isContainer() {
+  return fs.exists('/.dockerenv')
+}
+
+function isAllowed({error, allowedErrors}) {
+  if (_.isEmpty(error)) {
+    return true
+  }
+
+  if (_.isEmpty(allowedErrors)) {
+    return false
+  }
+
+  const _error = _.isArray(error) ? error.join(' ') : error
+
+  // note, this will return true for a partial match
+  // eg: if 'no' is allowed, 'nope' will pass, so b judicious about use
+  //
+  return _.some(allowedErrors, (e) => _error.includes(e))
 }

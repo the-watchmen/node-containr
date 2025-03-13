@@ -6,5 +6,8 @@ module.exports = {
       },
     },
     isTrue: true,
+    work: {
+      isInit: true,
+    },
   },
 }
