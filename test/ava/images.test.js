@@ -1,5 +1,6 @@
 import test from 'ava'
 import debug from '@watchmen/debug'
+import _ from 'lodash'
 import {stringify} from '@watchmen/helpr'
 import {withImages} from '../../src/index.js'
 import {initWork} from '../../src/util.js'
@@ -22,6 +23,23 @@ test('basic', async (t) => {
       })
       dbg('out=%o', out)
       t.true(out.includes('tmp'))
+    },
+  })
+})
+
+test('allowed', async (t) => {
+  const image = 'ubuntu'
+  await withImages({
+    images: {[image]: 'ubuntu:latest'},
+    async closure(withContainer) {
+      t.truthy(withContainer)
+      const out = await withContainer({
+        image,
+        input: 'ls nope',
+        allowedErrors: ['No such'],
+      })
+      dbg('out=%o', out)
+      t.true(_.isEmpty(out))
     },
   })
 })

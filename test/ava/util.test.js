@@ -9,6 +9,7 @@ import {
   filterError,
   getConfig,
   getHostWork,
+  isAllowed,
 } from '../../src/util.js'
 
 const dbg = debug(import.meta.url)
@@ -101,4 +102,25 @@ test('get-host-work: env', (t) => {
   dbg('work=%s', work)
   t.true(work.startsWith(root))
   delete process.env[key]
+})
+
+test('is-allowed: basic', (t) => {
+  t.false(isAllowed({error: 'nope', allowedErrors: ['nah', 'nuh']}))
+})
+
+test('is-allowed: partial', (t) => {
+  // beware: no allows nope
+  t.true(isAllowed({error: 'nope', allowedErrors: ['nah', 'nuh', 'no']}))
+})
+
+test('is-allowed: null error', (t) => {
+  t.true(isAllowed({allowedErrors: ['nah', 'nuh', 'no']}))
+})
+
+test('is-allowed: null allowed', (t) => {
+  t.false(isAllowed({error: 'nope'}))
+})
+
+test('is-allowed: array', (t) => {
+  t.true(isAllowed({error: ['nope', 'not'], allowedErrors: ['not']}))
 })

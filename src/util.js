@@ -26,6 +26,7 @@ export {
   toWorkdir,
   toEntry,
   isContainer,
+  isAllowed,
 }
 
 const git = '.git'
@@ -149,4 +150,21 @@ function toEntry(entry) {
 
 async function isContainer() {
   return fs.exists('/.dockerenv')
+}
+
+function isAllowed({error, allowedErrors}) {
+  if (_.isEmpty(error)) {
+    return true
+  }
+
+  if (_.isEmpty(allowedErrors)) {
+    return false
+  }
+
+  const _error = _.isArray(error) ? error.join(' ') : error
+
+  // note, this will return true for a partial match
+  // eg: if 'no' is allowed, 'nope' will pass, so b judicious about use
+  //
+  return _.some(allowedErrors, (e) => _error.includes(e))
 }
