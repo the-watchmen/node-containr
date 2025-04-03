@@ -122,5 +122,17 @@ test('is-allowed: null allowed', (t) => {
 })
 
 test('is-allowed: array', (t) => {
-  t.true(isAllowed({error: ['nope', 'not'], allowedErrors: ['not']}))
+  t.true(isAllowed({error: ['nope', 'not'], allowedErrors: ['nope', 'not']}))
+})
+
+test('is-allowed: array-more', (t) => {
+  t.true(
+    isAllowed({error: ['nope', 'not'], allowedErrors: ['nope', 'not', 'nix']}),
+  )
+})
+
+test('is-allowed: array-fail', (t) => {
+  t.false(
+    isAllowed({error: ['nope', 'not', 'nix'], allowedErrors: ['nope', 'not']}),
+  )
 })
