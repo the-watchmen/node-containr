@@ -163,7 +163,7 @@ function isAllowed({error, allowedErrors}) {
 
   let _error = _.isArray(error) ? error : [error]
 
-  _error = _.filter(_error, (e) => !_.isEmpty(e))
+  _error = _.filter(_error, (e) => !_.isEmpty(e.trim()))
 
   // note, this will return true for a partial match
   // eg: if 'no' is allowed, 'nope' will pass, so b judicious about use
