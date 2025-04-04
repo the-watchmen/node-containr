@@ -161,11 +161,12 @@ function isAllowed({error, allowedErrors}) {
     return false
   }
 
-  const _error = _.isArray(error) ? error : [error]
+  let _error = _.isArray(error) ? error : [error]
+
+  _error = _.filter(_error, (e) => !_.isEmpty(e))
 
   // note, this will return true for a partial match
   // eg: if 'no' is allowed, 'nope' will pass, so b judicious about use
   //
   return _.every(_error, (e) => _.some(allowedErrors, (e2) => e.includes(e2)))
-  // return _.some(allowedErrors, (e) => _error.includes(e))
 }

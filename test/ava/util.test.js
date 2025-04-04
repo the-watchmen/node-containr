@@ -136,3 +136,9 @@ test('is-allowed: array-fail', (t) => {
     isAllowed({error: ['nope', 'not', 'nix'], allowedErrors: ['nope', 'not']}),
   )
 })
+
+test('is-allowed: empty', (t) => {
+  t.true(
+    isAllowed({error: ['nope', 'not', ''], allowedErrors: ['nope', 'not']}),
+  )
+})
