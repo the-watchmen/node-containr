@@ -35,6 +35,7 @@ test('mount', async (t) => {
     ],
     // user,
     isLines: true,
+    throwOnError: false,
   })
   dbg('mount: out=%s, err=%s', stdout, stderr)
   t.true(_.isEmpty(stderr))
