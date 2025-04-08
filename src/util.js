@@ -16,7 +16,6 @@ export {
   getHostWork,
   getContainerWork,
   includes,
-  filterError,
   getConfig,
   toEnv,
   toVolumes,
@@ -27,6 +26,7 @@ export {
   toEntry,
   isContainer,
   isAllowed,
+  _execa,
 }
 
 const git = '.git'
@@ -84,27 +84,6 @@ function includes(o, s) {
   return _.isArray(o)
     ? _.some(_.reverse(o), (v) => v.includes(s))
     : o.includes(s)
-}
-
-function filterError({result, whitelist}) {
-  // [
-  //   "Unable to find image 'debian:bookworm-slim' locally",
-  //   'bookworm-slim: Pulling from library/debian',
-  //   'fd674058ff8f: Pulling fs layer',
-  //   'fd674058ff8f: Verifying Checksum',
-  //   'fd674058ff8f: Download complete',
-  //   'fd674058ff8f: Pull complete',
-  //   'Digest: sha256:d365f4920711a9074c4bcd178e8f457ee59250426441ab2a5f8106ed8fe948eb',
-  //   'Status: Downloaded newer image for debian:bookworm-slim'
-  // ]
-  _.some(whitelist, (v) => {
-    if (includes(result.stderr, v)) {
-      dbg('filtering error for target=%s', v)
-      result.stderr = []
-    }
-  })
-
-  return result
 }
 
 function getConfig({path, dflt = null}) {
@@ -168,5 +147,44 @@ function isAllowed({error, allowedErrors}) {
   // note, this will return true for a partial match
   // eg: if 'no' is allowed, 'nope' will pass, so b judicious about use
   //
-  return _.every(_error, (e) => _.some(allowedErrors, (e2) => e.includes(e2)))
+  return _.every(_error, (e) => {
+    const some = _.some(allowedErrors, (e2) => e.includes(e2))
+    if (!some) {
+      dbg(
+        'is-allowed: returning false because error=[%s] is not in allowed-errors=%o',
+        e,
+        allowedErrors,
+      )
+      if (_error.length > 1) {
+        dbg('other error(s):\n%s', pretty(_.filter(_error, (e3) => e3 !== e)))
+      }
+    }
+
+    return some
+  })
+}
+
+async function _execa({cmd, input, throwOnError = true, allowedErrors}) {
+  const result = await execa({
+    lines: true,
+    shell: true,
+    input: Array.isArray(input) ? input.join(`\n`) : input,
+    // https://github.com/sindresorhus/execa/blob/main/docs/errors.md
+    //
+    reject: false,
+  })`${cmd}`
+
+  !_.isEmpty(result.stdout) && dbg('out=\n%s', pretty(result.stdout))
+  !_.isEmpty(result.stderr) && dbg('err=\n%s', pretty(result.stderr))
+
+  if (throwOnError && !isAllowed({error: result.stderr, allowedErrors})) {
+    throw new Error(result.stderr)
+  }
+
+  result.stdout =
+    _.isArray(result.stdout) && _.size(result.stdout) === 1
+      ? result.stdout[0]
+      : result.stdout
+
+  return throwOnError ? result.stdout : result
 }

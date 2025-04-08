@@ -8,5 +8,6 @@ module.exports = {
     'capitalized-comments': 0,
     'n/prefer-global/process': 0,
     'unicorn/prevent-abbreviations': 0,
+    'no-unused-expressions': 0,
   },
 }
