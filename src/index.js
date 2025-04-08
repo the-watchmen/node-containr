@@ -4,7 +4,6 @@ import debug from '@watchmen/debug'
 import _ from 'lodash'
 import {
   getContainerWork,
-  filterError,
   getImageName,
   getVolumes,
   toEntry,
@@ -12,11 +11,10 @@ import {
   toVolumes,
   toWorkdir,
   toUser,
-  isAllowed,
+  _execa,
 } from './util.js'
 
 const dbg = debug(import.meta.url)
-const whitelist = ['Downloaded newer']
 
 export {withImage, withImages}
 
@@ -66,13 +64,14 @@ async function withImage({
   const cmd = `docker run --rm --interactive ${entry} ${toEnv(env)} ${toVolumes(_volumes)} ${toWorkdir(work)} ${toUser(user)} ${_image} ${command}`
   dbg('with-image: cmd=%o', cmd)
 
-  const result = await execa({
+  return _execa({
+    throwOnError: false,
     lines: isLines,
     shell: isShell,
     input: Array.isArray(input) ? input.join(`\n`) : input,
-  })`${cmd}`
-  dbg('out=%o, err=%o', result.stdout, result.stderr)
-  return filterError({result, whitelist})
+    cmd,
+    allowedErrors: ['Downloaded newer'],
+  })
 }
 
 async function withContainer({
@@ -89,26 +88,17 @@ async function withContainer({
   const cmd = `docker exec --interactive ${_user} ${toEnv(env)} ${toWorkdir(workdir)} ${container} /bin/sh`
   dbg('with-container: cmd=%o', cmd)
 
-  const result = await execa({
+  return _execa({
+    throwOnError,
+    allowedErrors,
     lines: true,
     shell: true,
     input: Array.isArray(input) ? input.join(`\n`) : input,
     // https://github.com/sindresorhus/execa/blob/main/docs/errors.md
     //
     reject: false,
-  })`${cmd}`
-  dbg('out=%o, err=%o', result.stdout, result.stderr)
-
-  if (throwOnError && !isAllowed({error: result.stderr, allowedErrors})) {
-    throw new Error(result.stderr)
-  }
-
-  result.stdout =
-    _.isArray(result.stdout) && _.size(result.stdout) === 1
-      ? result.stdout[0]
-      : result.stdout
-
-  return throwOnError ? result.stdout : result
+    cmd,
+  })
 }
 
 async function withImages({images, env = {}, volumes = {}, user, closure}) {

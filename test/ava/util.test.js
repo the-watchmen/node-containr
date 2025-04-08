@@ -6,10 +6,10 @@ import config from 'config'
 import {
   toFlags,
   includes,
-  filterError,
   getConfig,
   getHostWork,
   isAllowed,
+  _execa,
 } from '../../src/util.js'
 
 const dbg = debug(import.meta.url)
@@ -34,24 +34,6 @@ test('includes: array', (t) => {
 test('includes: string', (t) => {
   t.true(includes('foo bar baz', 'bar'))
   t.false(includes('foo bar baz', 'bip'))
-})
-
-test('filter-error', (t) => {
-  const result = filterError({
-    result: {stderr: ['foo', 'blah downloaded blah']},
-    whitelist: ['downloaded'],
-  })
-  dbg('filter-error: result=%o', result)
-  t.true(_.isEmpty(result.stderr))
-})
-
-test('filter-error: dont', (t) => {
-  const result = filterError({
-    result: {stderr: ['foo', 'blah blah']},
-    whitelist: ['downloaded'],
-  })
-  dbg('filter-error-dont: result=%o', result)
-  t.false(_.isEmpty(result.stderr))
 })
 
 test('get-config: cfg', (t) => {
@@ -144,4 +126,9 @@ test('is-allowed: empty', (t) => {
       allowedErrors: ['nope', 'not'],
     }),
   )
+})
+
+test('execa: basic', async (t) => {
+  const ls = await _execa({cmd: 'ls -la'})
+  t.true(Array.isArray(ls))
 })
