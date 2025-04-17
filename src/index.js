@@ -68,7 +68,7 @@ async function withImage({
     throwOnError: false,
     lines: isLines,
     shell: isShell,
-    input: Array.isArray(input) ? input.join(`\n`) : input,
+    input,
     cmd,
     allowedErrors: ['Downloaded newer'],
   })
@@ -93,7 +93,7 @@ async function withContainer({
     allowedErrors,
     lines: true,
     shell: true,
-    input: Array.isArray(input) ? input.join(`\n`) : input,
+    input,
     // https://github.com/sindresorhus/execa/blob/main/docs/errors.md
     //
     reject: false,

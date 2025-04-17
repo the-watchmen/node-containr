@@ -142,7 +142,8 @@ function isAllowed({error, allowedErrors}) {
 
   let _error = _.isArray(error) ? error : [error]
 
-  _error = _.filter(_error, (e) => !_.isEmpty(e.trim()))
+  _error = strip(_error)
+  // _.filter(_error, (e) => !_.isEmpty(e.trim()))
 
   // note, this will return true for a partial match
   // eg: if 'no' is allowed, 'nope' will pass, so b judicious about use
@@ -165,6 +166,16 @@ function isAllowed({error, allowedErrors}) {
 }
 
 async function _execa({cmd, input, throwOnError = true, allowedErrors}) {
+  _dbg({key: 'input', value: input})
+  // const _input = deepClean(input)
+  // if (!_.isEmpty(_input)) {
+  //   if (Array.isArray(_input)) {
+  //     dbg('input=\n%s', pretty(_input))
+  //   } else {
+  //     dbg('input=[%s]', input)
+  //   }
+  // }
+
   const result = await execa({
     lines: true,
     shell: true,
@@ -174,17 +185,36 @@ async function _execa({cmd, input, throwOnError = true, allowedErrors}) {
     reject: false,
   })`${cmd}`
 
-  !_.isEmpty(result.stdout) && dbg('out=\n%s', pretty(result.stdout))
-  !_.isEmpty(result.stderr) && dbg('err=\n%s', pretty(result.stderr))
+  const out = strip(result.stdout)
+  const err = strip(result.stderr)
+  // !_.isEmpty(out) && dbg('out=\n%s', pretty(out))
+  // !_.isEmpty(err) && dbg('err=\n%s', pretty(err))
+  _dbg({key: 'out', value: out})
+  _dbg({key: 'err', value: err})
 
-  if (throwOnError && !isAllowed({error: result.stderr, allowedErrors})) {
-    throw new Error(result.stderr)
+  if (throwOnError && !isAllowed({error: err, allowedErrors})) {
+    throw new Error(err)
   }
 
-  result.stdout =
-    _.isArray(result.stdout) && _.size(result.stdout) === 1
-      ? result.stdout[0]
-      : result.stdout
+  result.stdout = _.isArray(out) && _.size(out) === 1 ? out[0] : out
 
   return throwOnError ? result.stdout : result
+}
+
+function strip(a) {
+  return Array.isArray(a)
+    ? _.filter(a, (e) => !_.isEmpty(e.trim()))
+    : a && a.trim()
+}
+
+function _dbg({key, value}) {
+  let _value = strip(value)
+  if (!_.isEmpty(_value)) {
+    if (Array.isArray(_value) && _value.size > 1) {
+      dbg(`${key}=\n%s`, pretty(_value))
+    } else {
+      _value = Array.isArray(_value) ? _value[0] : _value
+      dbg(`${key}=[%s]`, _value)
+    }
+  }
 }
