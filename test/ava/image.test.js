@@ -28,7 +28,7 @@ test('multi line input', async (t) => {
     user: await getUid(),
   })
   dbg('out=%o', stdout)
-  t.is(stdout, 'foo')
+  t.deepEqual(stdout, ['foo'])
 })
 
 test('command', async (t) => {
@@ -55,7 +55,7 @@ test('volume', async (t) => {
     },
   })
   dbg('out=%o', stdout)
-  t.is(stdout, file)
+  t.deepEqual(stdout, [file])
 })
 
 test('entry', async (t) => {

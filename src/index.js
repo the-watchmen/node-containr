@@ -62,7 +62,6 @@ async function withImage({
   const work = getContainerWork()
 
   const cmd = `docker run --rm --interactive ${entry} ${toEnv(env)} ${toVolumes(_volumes)} ${toWorkdir(work)} ${toUser(user)} ${_image} ${command}`
-  dbg('with-image: cmd=%o', cmd)
 
   return _execa({
     throwOnError: false,
