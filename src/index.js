@@ -85,7 +85,6 @@ async function withContainer({
   assert(container, 'container required')
   const _user = user ? `--user ${user}` : ''
   const cmd = `docker exec --interactive ${_user} ${toEnv(env)} ${toWorkdir(workdir)} ${container} /bin/sh`
-  dbg('with-container: cmd=%o', cmd)
 
   return _execa({
     throwOnError,

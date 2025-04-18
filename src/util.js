@@ -146,7 +146,6 @@ function isAllowed({error, allowedErrors}) {
 
   _error = _.isArray(_error) ? _error : [_error]
 
-  dbg('error=%o, allowed=%o', _error, allowedErrors)
   // note, this will return true for a partial match
   // eg: if 'no' is allowed, 'nope' will pass, so b judicious about use
   //
