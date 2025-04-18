@@ -27,6 +27,9 @@ export {
   isContainer,
   isAllowed,
   _execa,
+  strip,
+  _dbg,
+  format,
 }
 
 const git = '.git'
@@ -132,7 +135,8 @@ async function isContainer() {
 }
 
 function isAllowed({error, allowedErrors}) {
-  if (_.isEmpty(error)) {
+  let _error = strip(error)
+  if (_.isEmpty(_error)) {
     return true
   }
 
@@ -140,11 +144,9 @@ function isAllowed({error, allowedErrors}) {
     return false
   }
 
-  let _error = _.isArray(error) ? error : [error]
+  _error = _.isArray(_error) ? _error : [_error]
 
-  _error = strip(_error)
-  // _.filter(_error, (e) => !_.isEmpty(e.trim()))
-
+  dbg('error=%o, allowed=%o', _error, allowedErrors)
   // note, this will return true for a partial match
   // eg: if 'no' is allowed, 'nope' will pass, so b judicious about use
   //
@@ -166,15 +168,8 @@ function isAllowed({error, allowedErrors}) {
 }
 
 async function _execa({cmd, input, throwOnError = true, allowedErrors}) {
-  _dbg({key: 'input', value: input})
-  // const _input = deepClean(input)
-  // if (!_.isEmpty(_input)) {
-  //   if (Array.isArray(_input)) {
-  //     dbg('input=\n%s', pretty(_input))
-  //   } else {
-  //     dbg('input=[%s]', input)
-  //   }
-  // }
+  _dbg({key: 'exec: cmd', value: cmd})
+  _dbg({key: 'exec: in', value: input})
 
   const result = await execa({
     lines: true,
@@ -185,36 +180,53 @@ async function _execa({cmd, input, throwOnError = true, allowedErrors}) {
     reject: false,
   })`${cmd}`
 
-  const out = strip(result.stdout)
-  const err = strip(result.stderr)
-  // !_.isEmpty(out) && dbg('out=\n%s', pretty(out))
-  // !_.isEmpty(err) && dbg('err=\n%s', pretty(err))
-  _dbg({key: 'out', value: out})
-  _dbg({key: 'err', value: err})
+  _dbg({key: 'exec: out', value: result.stdout})
+  _dbg({key: 'exec: err', value: result.stderr})
 
-  if (throwOnError && !isAllowed({error: err, allowedErrors})) {
-    throw new Error(err)
+  if (throwOnError && !isAllowed({error: result.stderr, allowedErrors})) {
+    throw new Error(result.stderr)
   }
 
-  result.stdout = _.isArray(out) && _.size(out) === 1 ? out[0] : out
-
-  return throwOnError ? result.stdout : result
+  return throwOnError ? normalize(result.stdout) : result
 }
 
-function strip(a) {
-  return Array.isArray(a)
-    ? _.filter(a, (e) => !_.isEmpty(e.trim()))
-    : a && a.trim()
+function normalize(val) {
+  return _.isArray(val) && _.size(val) === 1 ? val[0] : val
+}
+
+function strip(val) {
+  if (_.isEmpty(val)) {
+    return null
+  }
+
+  if (_.isArray(val)) {
+    let _val = _.map(val, (e) => (e ? e.trim() : e))
+    _val = _.filter(_val, (e) => e && !_.isEmpty(e))
+    return _.isEmpty(_val) ? null : _val
+  }
+
+  const _val = val.trim()
+  return _.isEmpty(_val) ? null : _val
+}
+
+function format(val) {
+  let _val = strip(val)
+
+  if (_.isArray(_val)) {
+    if (_val.length === 1) {
+      _val = _val[0]
+    } else {
+      return `${pretty(_val)}`
+    }
+  }
+
+  return _val && `[${_val}]`
 }
 
 function _dbg({key, value}) {
-  let _value = strip(value)
+  const _value = format(value)
+
   if (!_.isEmpty(_value)) {
-    if (Array.isArray(_value) && _value.size > 1) {
-      dbg(`${key}=\n%s`, pretty(_value))
-    } else {
-      _value = Array.isArray(_value) ? _value[0] : _value
-      dbg(`${key}=[%s]`, _value)
-    }
+    dbg(`${key}=%s`, _value)
   }
 }

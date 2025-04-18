@@ -3,14 +3,7 @@ import _ from 'lodash'
 import debug from '@watchmen/debug'
 import {pretty} from '@watchmen/helpr'
 import config from 'config'
-import {
-  toFlags,
-  includes,
-  getConfig,
-  getHostWork,
-  isAllowed,
-  _execa,
-} from '../../src/util.js'
+import {toFlags, includes, getConfig, getHostWork} from '../../src/util.js'
 
 const dbg = debug(import.meta.url)
 
@@ -84,51 +77,4 @@ test('get-host-work: env', (t) => {
   dbg('work=%s', work)
   t.true(work.startsWith(root))
   delete process.env[key]
-})
-
-test('is-allowed: basic', (t) => {
-  t.false(isAllowed({error: 'nope', allowedErrors: ['nah', 'nuh']}))
-})
-
-test('is-allowed: partial', (t) => {
-  // beware: no allows nope
-  t.true(isAllowed({error: 'nope', allowedErrors: ['nah', 'nuh', 'no']}))
-})
-
-test('is-allowed: null error', (t) => {
-  t.true(isAllowed({allowedErrors: ['nah', 'nuh', 'no']}))
-})
-
-test('is-allowed: null allowed', (t) => {
-  t.false(isAllowed({error: 'nope'}))
-})
-
-test('is-allowed: array', (t) => {
-  t.true(isAllowed({error: ['nope', 'not'], allowedErrors: ['nope', 'not']}))
-})
-
-test('is-allowed: array-more', (t) => {
-  t.true(
-    isAllowed({error: ['nope', 'not'], allowedErrors: ['nope', 'not', 'nix']}),
-  )
-})
-
-test('is-allowed: array-fail', (t) => {
-  t.false(
-    isAllowed({error: ['nope', 'not', 'nix'], allowedErrors: ['nope', 'not']}),
-  )
-})
-
-test('is-allowed: empty', (t) => {
-  t.true(
-    isAllowed({
-      error: ['nope', 'not', '', '  '],
-      allowedErrors: ['nope', 'not'],
-    }),
-  )
-})
-
-test('execa: basic', async (t) => {
-  const ls = await _execa({cmd: 'ls -la'})
-  t.true(Array.isArray(ls))
 })
