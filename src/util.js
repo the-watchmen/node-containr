@@ -203,6 +203,7 @@ async function _execa({
   cmd,
   input,
   throwOnError = true,
+  disallowedOut,
   allowedErrors,
   isSilentOut,
   isSilentErr,
@@ -230,6 +231,10 @@ async function _execa({
     dbg('suppressing stderr...')
   } else {
     _dbg({key: 'exec: err', value: stderr})
+  }
+
+  if (throwOnError && isDisallowed({out: stdout, disallowedOut})) {
+    throw new Error(stderr)
   }
 
   if (throwOnError && !isAllowed({error: stderr, allowedErrors})) {
