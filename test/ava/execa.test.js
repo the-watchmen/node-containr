@@ -30,3 +30,15 @@ test('basic', async (t) => {
   dbg('out=%s', out)
   t.truthy(out)
 })
+
+test('silent-err', async (t) => {
+  await t.throwsAsync(() => {
+    return _execa({cmd: 'ls -la nope', isSilentErr: true})
+  })
+})
+
+test('silent-out', async (t) => {
+  const out = await _execa({cmd: 'ls -la', isSilentOut: true})
+  dbg('out=%s', out)
+  t.truthy(out)
+})

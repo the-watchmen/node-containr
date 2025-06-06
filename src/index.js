@@ -27,6 +27,10 @@ async function withImage({
   input,
   isLines = false,
   isShell = true,
+  disallowedOut = [],
+  allowedErrors = [],
+  isSilentOut,
+  isSilentErr,
 }) {
   dbg(
     'with-image: image=%o, env=%o, volumes=%o, user=%o, command=%o, input=%o, is-lines=%o, is-shell=%o',
@@ -69,7 +73,10 @@ async function withImage({
     shell: isShell,
     input,
     cmd,
-    allowedErrors: ['Downloaded newer'],
+    allowedErrors: ['Downloaded newer', ...allowedErrors],
+    disallowedOut,
+    isSilentOut,
+    isSilentErr,
   })
 }
 
@@ -80,7 +87,10 @@ async function withContainer({
   throwOnError,
   user,
   workdir,
-  allowedErrors,
+  disallowedOut = [],
+  allowedErrors = [],
+  isSilentOut,
+  isSilentErr,
 }) {
   assert(container, 'container required')
   const _user = user ? `--user ${user}` : ''
@@ -88,7 +98,6 @@ async function withContainer({
 
   return _execa({
     throwOnError,
-    allowedErrors,
     lines: true,
     shell: true,
     input,
@@ -96,6 +105,10 @@ async function withContainer({
     //
     reject: false,
     cmd,
+    disallowedOut,
+    allowedErrors,
+    isSilentOut,
+    isSilentErr,
   })
 }
 
