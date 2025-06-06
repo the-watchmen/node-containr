@@ -26,6 +26,7 @@ export {
   toEntry,
   isContainer,
   isAllowed,
+  isDisallowed,
   _execa,
   strip,
   _dbg,
@@ -134,6 +135,38 @@ async function isContainer() {
   return fs.exists('/.dockerenv')
 }
 
+function isDisallowed({out, disallowedOut}) {
+  let _out = strip(out)
+  if (_.isEmpty(_out)) {
+    return false
+  }
+
+  if (_.isEmpty(disallowedOut)) {
+    return false
+  }
+
+  _out = _.isArray(_out) ? _out : [_out]
+
+  // note, this will return true for a partial match
+  // eg: if 'no' is allowed, 'nope' will fail, so b judicious about use
+  //
+  return _.some(_out, (e) => {
+    const some = _.some(disallowedOut, (e2) => e.includes(e2))
+    if (some) {
+      dbg(
+        'is-disallowed: returning true because out=[%s] is in disallowed-out=%o',
+        e,
+        disallowedOut,
+      )
+      if (_out.length > 1) {
+        dbg('other out(s):\n%s', pretty(_.filter(_out, (e3) => e3 !== e)))
+      }
+    }
+
+    return some
+  })
+}
+
 function isAllowed({error, allowedErrors}) {
   let _error = strip(error)
   if (_.isEmpty(_error)) {
@@ -166,7 +199,14 @@ function isAllowed({error, allowedErrors}) {
   })
 }
 
-async function _execa({cmd, input, throwOnError = true, allowedErrors}) {
+async function _execa({
+  cmd,
+  input,
+  throwOnError = true,
+  allowedErrors,
+  isSilentOut,
+  isSilentErr,
+}) {
   _dbg({key: 'exec: cmd', value: cmd})
   _dbg({key: 'exec: in', value: input})
 
@@ -179,14 +219,24 @@ async function _execa({cmd, input, throwOnError = true, allowedErrors}) {
     reject: false,
   })`${cmd}`
 
-  _dbg({key: 'exec: out', value: result.stdout})
-  _dbg({key: 'exec: err', value: result.stderr})
-
-  if (throwOnError && !isAllowed({error: result.stderr, allowedErrors})) {
-    throw new Error(result.stderr)
+  const {stdout, stderr} = result
+  if (isSilentOut && stdout) {
+    dbg('supressing stdout...')
+  } else {
+    _dbg({key: 'exec: out', value: stdout})
   }
 
-  return throwOnError ? normalize(result.stdout) : result
+  if (isSilentErr && stderr) {
+    dbg('suppressing stderr...')
+  } else {
+    _dbg({key: 'exec: err', value: stderr})
+  }
+
+  if (throwOnError && !isAllowed({error: stderr, allowedErrors})) {
+    throw new Error(stderr)
+  }
+
+  return throwOnError ? normalize(stdout) : result
 }
 
 function normalize(val) {
