@@ -157,13 +157,23 @@ async function withImages({images, env = {}, volumes = {}, user, closure}) {
   dbg('with-images: started containers=%o', containers)
 
   const result = await closure(
-    ({image, input, env = {}, throwOnError = true, allowedErrors = []}) => {
+    ({
+      image,
+      input,
+      env = {},
+      throwOnError = true,
+      disallowedOut = [],
+      allowedErrors = [],
+      isSilentOut,
+      isSilentErr,
+    }) => {
       dbg(
-        'with-container: image=%o, env=%o, input=%o, throw-on-error=%o, allowed-errors=%o',
+        'with-container: image=%o, env=%o, input=%o, throw-on-error=%o, disallowed-out=%s, allowed-errors=%o,',
         image,
         env,
         input,
         throwOnError,
+        disallowedOut,
         allowedErrors,
       )
       return withContainer({
@@ -171,7 +181,10 @@ async function withImages({images, env = {}, volumes = {}, user, closure}) {
         env,
         input,
         throwOnError,
+        disallowedOut,
         allowedErrors,
+        isSilentOut,
+        isSilentErr,
       })
     },
   )
