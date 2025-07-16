@@ -45,12 +45,12 @@ async function withImage({
   )
 
   const _image = getImageName(image)
-  assert(_image, 'image name required')
+  assert.ok(_image, 'image name required')
 
   if (image.hasShell === false) {
-    assert(_.every([command, !input]))
+    assert.ok(_.every([command, !input]))
   } else {
-    assert(_.every([input, !command]))
+    assert.ok(_.every([input, !command]))
   }
 
   const _volumes = getVolumes(volumes)
@@ -92,7 +92,7 @@ async function withContainer({
   isSilentOut,
   isSilentErr,
 }) {
-  assert(container, 'container required')
+  assert.ok(container, 'container required')
   const _user = user ? `--user ${user}` : ''
   const cmd = `docker exec --interactive ${_user} ${toEnv(env)} ${toWorkdir(workdir)} ${container} /bin/sh`
 
@@ -113,16 +113,16 @@ async function withContainer({
 }
 
 async function withImages({images, env = {}, volumes = {}, user, closure}) {
-  assert(_.size(images), 'images required')
-  assert(
+  assert.ok(_.size(images), 'images required')
+  assert.ok(
     !_.some(images, ['hasShell', false]),
     'invalid use of image without shell',
   )
-  assert(
+  assert.ok(
     _.every(images, (v) => getImageName(v)),
     'image name required',
   )
-  assert(closure, 'closure required')
+  assert.ok(closure, 'closure required')
 
   const _volumes = getVolumes(volumes)
 

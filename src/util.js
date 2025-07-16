@@ -1,7 +1,7 @@
 import assert from 'node:assert'
 import debug from '@watchmen/debug'
 import {parseBoolean, pretty} from '@watchmen/helpr'
-import config from 'config'
+import {getConfig} from '@watchmen/configr'
 import fs from 'fs-extra'
 import _ from 'lodash'
 import {execa} from 'execa'
@@ -16,7 +16,6 @@ export {
   getHostWork,
   getContainerWork,
   includes,
-  getConfig,
   toEnv,
   toVolumes,
   getVolumes,
@@ -34,6 +33,7 @@ export {
 }
 
 const git = '.git'
+const config = await getConfig()
 
 async function initWork() {
   const _isContainer = await isContainer()
@@ -67,37 +67,27 @@ function toFlags({map, flag, separator = '='}) {
 
 async function getUid() {
   const {stdout, stderr} = await execa({})`id -u`
-  assert(_.isEmpty(stderr), stderr)
+  assert.ok(_.isEmpty(stderr), stderr)
   dbg('get-uid: uid=%s', stdout)
   return stdout
 }
 
 function isInitWork() {
-  return parseBoolean(getConfig({path: 'work.isInit', dflt: false}))
+  return parseBoolean(config?.containr?.work?.isInit)
 }
 
 function getHostWork() {
-  return getConfig({path: 'work.host', dflt: '/tmp/containr/work'})
+  return config?.containr?.work?.host ?? '/tmp/containr/work'
 }
 
 function getContainerWork() {
-  return getConfig({path: 'work.container', dflt: '/tmp/containr/work'})
+  return config?.containr?.work?.container ?? '/tmp/containr/work'
 }
 
 function includes(o, s) {
   return _.isArray(o)
     ? _.some(_.reverse(o), (v) => v.includes(s))
     : o.includes(s)
-}
-
-function getConfig({path, dflt = null}) {
-  // foo.bar -> CONTAINR_FOO_BAR
-  const toks = ['containr', ...path.split('.')]
-  const env = _.snakeCase(toks.join('_')).toUpperCase()
-  const _path = toks.join('.')
-  const value = process.env[env] || _.get(config, _path) || dflt
-  dbg('get-config: env=%s, path=%s, dflt=%s, value=%s', env, _path, dflt, value)
-  return value
 }
 
 function toEnv(map) {

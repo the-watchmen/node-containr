@@ -1,5 +1,6 @@
 module.exports = {
   prettier: true,
+  space: true,
   rules: {
     'unicorn/no-anonymous-default-export': 0,
     'import/no-anonymous-default-export': 0,
