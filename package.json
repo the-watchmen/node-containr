@@ -27,19 +27,19 @@
   "author": "tony kerz",
   "license": "ISC",
   "dependencies": {
+    "@watchmen/configr": "^2.0.5",
     "@watchmen/debug": "^2.0.8",
     "@watchmen/helpr": "^3.1.0",
-    "config": "^3.3.12",
-    "execa": "^9.5.2",
+    "execa": "^9.6.0",
     "fs-extra": "^11.3.0",
     "lodash": "^4.17.21"
   },
   "devDependencies": {
-    "ava": "^6.2.0",
-    "eslint-config-prettier": "^10.0.2",
-    "eslint-plugin-prettier": "^5.2.3",
-    "prettier": "^3.5.2",
-    "xo": "^0.60.0"
+    "ava": "^6.4.1",
+    "eslint-config-prettier": "^10.1.5",
+    "eslint-plugin-prettier": "^5.5.1",
+    "prettier": "^3.6.2",
+    "xo": "^1.1.1"
   },
   "publishConfig": {
     "access": "public"
