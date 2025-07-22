@@ -33,7 +33,7 @@ export {
 }
 
 const git = '.git'
-const config = await getConfig()
+const config = await getConfig({caller: import.meta.url})
 
 async function initWork() {
   const _isContainer = await isContainer()

@@ -6,7 +6,8 @@ import {getConfig} from '@watchmen/configr'
 import {toFlags, includes, getHostWork} from '../../src/util.js'
 
 const dbg = debug(import.meta.url)
-const config = await getConfig()
+const caller = import.meta.url
+const config = await getConfig({caller})
 
 test('to-flags: basic', (t) => {
   t.is(toFlags({map: {a: 'b', c: 'd'}, flag: 'foo'}), '--foo a=b --foo c=d')
@@ -42,9 +43,11 @@ test('cfg-bool', (t) => {
 
 test('cfg-env', async (t) => {
   const key = 'configr_a_b_d'
-  process.env[key] = 'sumthin'
-  const config = await getConfig()
-  t.is(config.a.b.d, process.env[key])
+  const val = 'sumthin'
+  process.env[key] = val
+  const config = await getConfig({caller, bustCache: true})
+  dbg('config=%s', pretty(config))
+  t.is(config.a.b.d, val)
   delete process.env[key]
 })
 
