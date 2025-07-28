@@ -2,12 +2,10 @@ import test from 'ava'
 import _ from 'lodash'
 import debug from '@watchmen/debug'
 import {pretty} from '@watchmen/helpr'
-import {getConfig} from '@watchmen/configr'
+import config from 'config'
 import {toFlags, includes, getHostWork} from '../../src/util.js'
 
 const dbg = debug(import.meta.url)
-const caller = import.meta.url
-const config = await getConfig({caller})
 
 test('to-flags: basic', (t) => {
   t.is(toFlags({map: {a: 'b', c: 'd'}, flag: 'foo'}), '--foo a=b --foo c=d')
@@ -39,16 +37,6 @@ test('cfg', (t) => {
 test('cfg-bool', (t) => {
   dbg('config=%s', pretty(config))
   t.is(config.containr.isTrue, true)
-})
-
-test('cfg-env', async (t) => {
-  const key = 'configr_a_b_d'
-  const val = 'sumthin'
-  process.env[key] = val
-  const config = await getConfig({caller, bustCache: true})
-  dbg('config=%s', pretty(config))
-  t.is(config.a.b.d, val)
-  delete process.env[key]
 })
 
 test('cfg-dflt', (t) => {

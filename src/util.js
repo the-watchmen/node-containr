@@ -1,7 +1,7 @@
 import assert from 'node:assert'
 import debug from '@watchmen/debug'
 import {parseBoolean, pretty} from '@watchmen/helpr'
-import {getConfig} from '@watchmen/configr'
+import config from 'config'
 import fs from 'fs-extra'
 import _ from 'lodash'
 import {execa} from 'execa'
@@ -33,7 +33,6 @@ export {
 }
 
 const git = '.git'
-const config = await getConfig({caller: import.meta.url})
 
 async function initWork() {
   const _isContainer = await isContainer()
