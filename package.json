@@ -1,6 +1,6 @@
 {
   "name": "@watchmen/containr",
-  "version": "2.3.3",
+  "version": "2.3.4",
   "description": "run cli in containers",
   "type": "module",
   "exports": {
@@ -28,7 +28,7 @@
   "license": "ISC",
   "dependencies": {
     "@watchmen/debug": "^2.0.8",
-    "@watchmen/helpr": "^3.1.0",
+    "@watchmen/helpr": "^3.2.0",
     "config": "^4.1.0",
     "execa": "^9.6.0",
     "fs-extra": "^11.3.0",
