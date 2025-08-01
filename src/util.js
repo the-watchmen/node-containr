@@ -1,6 +1,6 @@
 import assert from 'node:assert'
 import debug from '@watchmen/debug'
-import {parseBoolean, pretty} from '@watchmen/helpr'
+import {parseBoolean, pretty, getEnvOrObjValue} from '@watchmen/helpr'
 import config from 'config'
 import fs from 'fs-extra'
 import _ from 'lodash'
@@ -72,15 +72,25 @@ async function getUid() {
 }
 
 function isInitWork() {
-  return parseBoolean(config?.containr?.work?.isInit)
+  return parseBoolean(
+    getEnvOrObjValue({path: 'containr.work.isInit', obj: config, dflt: false}),
+  )
 }
 
 function getHostWork() {
-  return config?.containr?.work?.host ?? '/tmp/containr/work'
+  return getEnvOrObjValue({
+    path: 'containr.work.host',
+    obj: config,
+    dflt: '/tmp/containr/work',
+  })
 }
 
 function getContainerWork() {
-  return config?.containr?.work?.container ?? '/tmp/containr/work'
+  return getEnvOrObjValue({
+    path: 'containr.work.container',
+    obj: config,
+    dflt: '/tmp/containr/work',
+  })
 }
 
 function includes(o, s) {
